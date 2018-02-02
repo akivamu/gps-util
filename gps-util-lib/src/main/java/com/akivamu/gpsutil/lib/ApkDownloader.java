@@ -14,6 +14,8 @@ import com.akivamu.gpsutil.lib.tasks.FetchAppInfoTask;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Setter;
+
 public class ApkDownloader {
     private static final String TAG = ApkDownloader.class.getSimpleName();
 
@@ -21,6 +23,8 @@ public class ApkDownloader {
     private final GoogleIdentity googleIdentity;
     private final DeviceInfo deviceInfo;
     private final String downloadFolderInSdcard;
+    @Setter
+    private boolean showCompletedNotification;
 
     private final DownloadManager downloadManager;
     private final Map<String, Long> downloadingPackageName = new HashMap<>();
@@ -50,7 +54,13 @@ public class ApkDownloader {
                 }
 
                 // Download
-                DownloadTask downloadTask = new DownloadTask(context, appInfo, downloadFolderInSdcard, referrer, new DownloadTask.Callback() {
+                DownloadTask.Params params = DownloadTask.Params.builder()
+                        .appInfo(appInfo)
+                        .downloadFolderInSdcard(downloadFolderInSdcard)
+                        .referrer(referrer)
+                        .showCompletedNotification(showCompletedNotification)
+                        .build();
+                DownloadTask downloadTask = new DownloadTask(context, params, new DownloadTask.Callback() {
                     @Override
                     public void onDownloadEnqueued(long downloadId) {
                         downloadingPackageName.put(appInfo.getPackageName(), downloadId);

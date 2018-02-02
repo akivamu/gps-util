@@ -14,38 +14,35 @@ import com.akivamu.gpsutil.lib.data.AppInfo;
 
 import java.io.File;
 
+import lombok.Builder;
+import lombok.Data;
+import lombok.NonNull;
+
 public class DownloadTask {
     private static final String TAG = DownloadTask.class.getSimpleName();
     // Params
     private final Context context;
-    private final AppInfo appInfo;
-    private final String downloadFolderInSdcard;
-    private final String customApkFileName;
-    private final String referrer;
+    private final Params params;
     private final Callback callback;
 
     private final DownloadManager downloadManager;
     private long enqueuedDownloadId;
 
-    public DownloadTask(Context context, AppInfo appInfo, String downloadFolderInSdcard, String referrer, Callback callback) {
-        this(context, appInfo, downloadFolderInSdcard, null, referrer, callback);
-    }
-
-    public DownloadTask(Context context, AppInfo appInfo, String downloadFolderInSdcard, String customApkFileName, String referrer, Callback callback) {
+    public DownloadTask(Context context, Params params, Callback callback) {
         this.context = context;
-        this.appInfo = appInfo;
-        this.downloadFolderInSdcard = downloadFolderInSdcard;
-        this.customApkFileName = customApkFileName;
-        this.referrer = referrer;
+        this.params = params;
         this.callback = callback;
 
         this.downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
     public void execute() {
-        String apkFileName = appInfo.getPackageName() + ".apk";
-        if (customApkFileName != null) {
-            apkFileName = customApkFileName;
+        AppInfo appInfo = params.getAppInfo();
+
+        String packageName = appInfo.getPackageName();
+        String apkFileName = packageName + ".apk";
+        if (params.getCustomApkFileName() != null) {
+            apkFileName = params.getCustomApkFileName();
         }
 
         // Build download request
@@ -54,12 +51,12 @@ public class DownloadTask {
                 .setAllowedOverRoaming(true)
                 .setTitle(appInfo.getPackageName())
                 .setDescription("Downloading")
-                .setDestinationInExternalPublicDir(downloadFolderInSdcard, apkFileName)
+                .setDestinationInExternalPublicDir(params.getDownloadFolderInSdcard(), apkFileName)
                 .addRequestHeader("Cookie", "MarketDA=" + appInfo.getMarketDA())
-                .addRequestHeader("Referer", referrer); // https://en.wikipedia.org/wiki/HTTP_referer
+                .addRequestHeader("Referer", params.getReferrer()); // https://en.wikipedia.org/wiki/HTTP_referer
 
-        if (android.os.Build.VERSION.SDK_INT >= 11) {
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE | DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        if (params.isShowCompletedNotification()) {
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         }
 
         // Enqueue download
@@ -105,6 +102,18 @@ public class DownloadTask {
         }, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
         callback.onDownloadEnqueued(enqueuedDownloadId);
+    }
+
+    @Data
+    @Builder
+    public static class Params {
+        @NonNull
+        private final AppInfo appInfo;
+        @NonNull
+        private final String downloadFolderInSdcard;
+        private final String customApkFileName;
+        private final String referrer;
+        private final boolean showCompletedNotification;
     }
 
     public interface Callback {

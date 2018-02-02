@@ -31,7 +31,14 @@ public class DownloadTaskTest {
         String savedApkFileName = System.currentTimeMillis() + ".apk";
 
         final CountDownLatch signal = new CountDownLatch(1);
-        DownloadTask downloadTask = new DownloadTask(appContext, appInfo, "/", savedApkFileName, "", new DownloadTask.Callback() {
+        DownloadTask.Params params = DownloadTask.Params.builder()
+                .appInfo(appInfo)
+                .downloadFolderInSdcard("/")
+                .customApkFileName(savedApkFileName)
+                .referrer("")
+                .showCompletedNotification(false)
+                .build();
+        DownloadTask downloadTask = new DownloadTask(appContext, params, new DownloadTask.Callback() {
             @Override
             public void onDownloadEnqueued(long downloadId) {
                 enqueuedDownloadId = downloadId;
