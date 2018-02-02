@@ -20,28 +20,46 @@ public class ApkDownloader {
     private static final String TAG = ApkDownloader.class.getSimpleName();
 
     private final Context context;
-    private final GoogleIdentity googleIdentity;
-    private final DeviceInfo deviceInfo;
-    private final String downloadFolderInSdcard;
+    @Setter
+    private GoogleIdentity googleIdentity;
+    @Setter
+    private DeviceInfo deviceInfo;
+    @Setter
+    private String downloadFolderInSdcard;
     @Setter
     private boolean showCompletedNotification;
 
     private final DownloadManager downloadManager;
     private final Map<String, Long> downloadingPackageName = new HashMap<>();
 
-    public ApkDownloader(Context context, GoogleIdentity googleIdentity, DeviceInfo deviceInfo, String downloadFolderInSdcard) {
+    public ApkDownloader(Context context) {
         this.context = context;
-        this.googleIdentity = googleIdentity;
-        this.deviceInfo = deviceInfo;
-        this.downloadFolderInSdcard = downloadFolderInSdcard;
 
         this.downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
-    public void requestDownload(final String packageName, final String referrer, final Callback callback) {
+    public boolean requestDownload(final String packageName) {
+        return this.requestDownload(packageName, "", null);
+    }
+
+    public boolean requestDownload(final String packageName, final String referrer) {
+        return this.requestDownload(packageName, referrer, null);
+    }
+
+    public boolean requestDownload(final String packageName, final Callback callback) {
+        return this.requestDownload(packageName, "", callback);
+    }
+
+    public boolean requestDownload(final String packageName, final String referrer, final Callback callback) {
+        // Validate state
+        if (googleIdentity == null || deviceInfo == null || downloadingPackageName == null) {
+            Log.e(TAG, "ApkDownloader not setup");
+            return false;
+        }
+
         if (downloadingPackageName.get(packageName) != null) {
             Log.w(TAG, "Already requested: " + packageName);
-            return;
+            return true;
         }
 
         // Fetch AppInfo
@@ -49,7 +67,7 @@ public class ApkDownloader {
             @Override
             public void onSuccess(final AppInfo appInfo) {
                 if (appInfo.getDownloadUrl() == null || appInfo.getDownloadUrl().length() == 0) {
-                    callback.onError("AppInfo: download url null");
+                    if (callback != null) callback.onError("AppInfo: download url null");
                     return;
                 }
 
@@ -69,13 +87,13 @@ public class ApkDownloader {
                     @Override
                     public void onDownloadCompleted(ApkFile apkFile) {
                         downloadingPackageName.remove(appInfo.getPackageName());
-                        callback.onSuccess(apkFile);
+                        if (callback != null) callback.onSuccess(apkFile);
                     }
 
                     @Override
                     public void onError(String error) {
                         downloadingPackageName.remove(appInfo.getPackageName());
-                        callback.onError(error);
+                        if (callback != null) callback.onError(error);
                     }
                 });
                 downloadTask.execute();
@@ -83,10 +101,12 @@ public class ApkDownloader {
 
             @Override
             public void onError(String error) {
-                callback.onError(error);
+                if (callback != null) callback.onError(error);
             }
         });
         fetchAppInfoTask.execute();
+
+        return true;
     }
 
     public void cancelDownload(long... ids) {
@@ -96,6 +116,10 @@ public class ApkDownloader {
             String packageName = findDownloadingPackageName(id);
             downloadingPackageName.remove(packageName);
         }
+    }
+
+    public boolean isDownloading(String packageName) {
+        return downloadingPackageName.get(packageName) != null && downloadingPackageName.get(packageName) > 0;
     }
 
     private String findDownloadingPackageName(long id) {

@@ -15,7 +15,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private ApkDownloader apkDownloader;
-    private GoogleIdentity googleIdentity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,14 +27,13 @@ public class MainActivity extends AppCompatActivity {
     private void loginGoogle() {
         new AccountLoginTask(this, new AccountLoginTask.Callback() {
             @Override
-            public void onSuccess(GoogleIdentity result) {
-                Toast.makeText(MainActivity.this, "Google: " + result.getName(), Toast.LENGTH_SHORT).show();
-                Log.d(TAG, "Google login: " + result.getName());
-                googleIdentity = result;
-                apkDownloader = new ApkDownloader(MainActivity.this,
-                        googleIdentity,
-                        DeviceInfo.buildDefault(MainActivity.this),
-                        "/");
+            public void onSuccess(GoogleIdentity googleIdentity) {
+                Toast.makeText(MainActivity.this, "Google: " + googleIdentity.getName(), Toast.LENGTH_SHORT).show();
+
+                apkDownloader = new ApkDownloader(MainActivity.this);
+                apkDownloader.setGoogleIdentity(googleIdentity);
+                apkDownloader.setDeviceInfo(DeviceInfo.buildDefault(MainActivity.this));
+                apkDownloader.setDownloadFolderInSdcard("/");
 
                 apkDownloader.requestDownload("jp.Appsys.PanecalST", "", new ApkDownloader.Callback() {
                     @Override
@@ -54,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
             public void onError(String error) {
                 Toast.makeText(MainActivity.this, "Google: FAILED", Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "Google login: " + error);
-                googleIdentity = null;
             }
         }).execute();
     }

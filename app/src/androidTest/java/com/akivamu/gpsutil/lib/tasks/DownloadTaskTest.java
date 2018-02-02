@@ -57,7 +57,7 @@ public class DownloadTaskTest {
         });
         downloadTask.execute();
 
-        signal.await(30, TimeUnit.SECONDS);
+        signal.await(60, TimeUnit.SECONDS);
         Assert.assertTrue(enqueuedDownloadId > 0);
         Assert.assertNotNull(resultApkFile);
         Assert.assertTrue(resultApkFile.getFile().exists());
