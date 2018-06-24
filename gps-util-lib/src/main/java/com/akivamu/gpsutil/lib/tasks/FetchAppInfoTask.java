@@ -18,7 +18,7 @@ import com.github.yeriomin.playstoreapi.PlayStoreApiBuilder;
 import java.io.IOException;
 import java.util.Locale;
 
-import github.yeriomin.NativeDeviceInfoProvider;
+import github.yeriomin.FakeDeviceInfoProvider;
 import github.yeriomin.NativeHttpClientAdapter;
 
 public class FetchAppInfoTask extends AsyncTask<Void, Void, AppInfo> {
@@ -60,7 +60,7 @@ public class FetchAppInfoTask extends AsyncTask<Void, Void, AppInfo> {
     }
 
     private GooglePlayAPI buildApi() {
-        NativeDeviceInfoProvider deviceInfoProvider = new NativeDeviceInfoProvider();
+        FakeDeviceInfoProvider deviceInfoProvider = new FakeDeviceInfoProvider(deviceInfo);
         deviceInfoProvider.setContext(context);
         deviceInfoProvider.setLocaleString(Locale.US.toString());
 
