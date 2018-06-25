@@ -87,8 +87,14 @@ public class DownloadTask {
                     if (c.moveToFirst()) {
                         switch (c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
                             case DownloadManager.STATUS_SUCCESSFUL:
-                                ApkFile apkFile = new ApkFile(context, new File(c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME))));
-                                callback.onDownloadCompleted(apkFile);
+                                String downloadFileLocalUri = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                                if (downloadFileLocalUri != null) {
+                                    File file = new File(Uri.parse(downloadFileLocalUri).getPath());
+                                    ApkFile apkFile = new ApkFile(context, file);
+                                    callback.onDownloadCompleted(apkFile);
+                                } else {
+                                    callback.onError("Fail to download");
+                                }
                                 break;
                             case DownloadManager.STATUS_FAILED:
                                 callback.onError("Fail to download");
