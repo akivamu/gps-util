@@ -26,8 +26,10 @@ public class DeviceInfo {
         deviceInfo.sdkInt = String.valueOf(Build.VERSION.SDK_INT);
 
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        deviceInfo.operatorName = tm.getNetworkOperatorName();
-        deviceInfo.operatorNumeric = tm.getNetworkOperator();
+        if (tm != null) {
+            deviceInfo.operatorName = tm.getNetworkOperatorName();
+            deviceInfo.operatorNumeric = tm.getNetworkOperator();
+        }
 
         Locale locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
