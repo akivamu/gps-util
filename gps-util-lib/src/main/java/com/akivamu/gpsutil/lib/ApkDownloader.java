@@ -118,6 +118,14 @@ public class ApkDownloader {
         }
     }
 
+    public void cancelDownload(String... packageNames) {
+        for (String packageName : packageNames) {
+            if (downloadingPackageName.containsKey(packageName)) {
+                cancelDownload(downloadingPackageName.get(packageName));
+            }
+        }
+    }
+
     public boolean isDownloading(String packageName) {
         return downloadingPackageName.get(packageName) != null && downloadingPackageName.get(packageName) > 0;
     }
