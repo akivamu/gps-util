@@ -4,7 +4,7 @@ import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.accounts.AccountManagerFuture;
-import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -20,18 +20,18 @@ public class AccountLoginTask extends AsyncTask<Void, Void, GoogleIdentity> {
     private static final String AUTH_TOKEN_TYPE = "androidmarket";
 
     private Callback callback;
-    private Activity activity;
+    private Context context;
     private String error;
 
-    public AccountLoginTask(Activity activity, Callback callback) {
-        this.activity = activity;
+    public AccountLoginTask(Context context, Callback callback) {
+        this.context = context;
         this.callback = callback;
     }
 
     @Override
     protected GoogleIdentity doInBackground(Void... voids) {
-        AccountManager am = AccountManager.get(activity);
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
+        AccountManager am = AccountManager.get(context);
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.GET_ACCOUNTS) != PackageManager.PERMISSION_GRANTED) {
             error = "Don't have permission GET_ACCOUNTS";
             Log.e(TAG, error);
             return null;
@@ -40,7 +40,7 @@ public class AccountLoginTask extends AsyncTask<Void, Void, GoogleIdentity> {
         try {
             Account[] accounts = am.getAccountsByType("com.google");
             AccountManagerFuture<Bundle> accountManagerFuture;
-            accountManagerFuture = am.getAuthToken(accounts[0], AUTH_TOKEN_TYPE, null, activity, null, null);
+            accountManagerFuture = am.getAuthToken(accounts[0], AUTH_TOKEN_TYPE, null, true, null, null);
 
             Bundle authTokenBundle = accountManagerFuture.getResult();
 
@@ -72,7 +72,7 @@ public class AccountLoginTask extends AsyncTask<Void, Void, GoogleIdentity> {
     }
 
     private String getGsfId() {
-        Cursor c = activity.getContentResolver().query(
+        Cursor c = context.getContentResolver().query(
                 Uri.parse("content://com.google.android.gsf.gservices"),
                 null,
                 null,
